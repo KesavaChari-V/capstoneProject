@@ -21,7 +21,7 @@ let sampleBooks = [
         title: "To Kill a Mockingbird",
         author: "Harper Lee",
         isbn: "9780061120084",
-        reviews: ['Very Good Book']
+        reviews: []
     },
     {
         id: 3,
@@ -39,26 +39,70 @@ app.get('/books', (req, res) => {
     res.json(sampleBooks);
 });
 
-// Task 2: Get the books based on ISBN
-app.get('/books/isbn/:isbn', (req, res) => {
-    const book = sampleBooks.find(b => b.isbn === req.params.isbn);
-    if (book) {
-        res.json(book);
-    } else {
-        res.status(404).send('Book not found');
+// Task 10: Get all books – Using async callback function
+app.get('/async/books', async (req, res) => {
+    try {
+        const books = await new Promise((resolve) => {
+            resolve(sampleBooks);
+        });
+        res.json(books);
+    } catch (error) {
+        res.status(500).send('Error retrieving books');
     }
 });
 
-// Task 3: Get all books by Author
-app.get('/books/author/:author', (req, res) => {
-    const booksByAuthor = sampleBooks.filter(b => b.author.toLowerCase() === req.params.author.toLowerCase());
-    res.json(booksByAuthor);
+// Task 11: Search by ISBN – Using Promises
+app.get('/books/isbn/:isbn', (req, res) => {
+    const isbnToFind = req.params.isbn;
+
+    const findBookByISBN = new Promise((resolve, reject) => {
+        const book = sampleBooks.find(b => b.isbn === isbnToFind);
+        if (book) {
+            resolve(book);
+        } else {
+            reject('Book not found');
+        }
+    });
+
+    findBookByISBN
+        .then(book => res.json(book))
+        .catch(error => res.status(404).send(error));
 });
 
-// Task 4: Get all books based on Title
+// Task 12: Search by Author – Using Promises
+app.get('/books/author/:author', (req, res) => {
+    const authorToFind = req.params.author;
+
+    const findBooksByAuthor = new Promise((resolve, reject) => {
+        const booksByAuthor = sampleBooks.filter(b => b.author.toLowerCase() === authorToFind.toLowerCase());
+        if (booksByAuthor.length > 0) {
+            resolve(booksByAuthor);
+        } else {
+            reject('No books found by this author');
+        }
+    });
+
+    findBooksByAuthor
+        .then(books => res.json(books))
+        .catch(error => res.status(404).send(error));
+});
+
+// Task 13: Search by Title
 app.get('/books/title/:title', (req, res) => {
-    const booksByTitle = sampleBooks.filter(b => b.title.toLowerCase().includes(req.params.title.toLowerCase()));
-    res.json(booksByTitle);
+    const titleToFind = req.params.title;
+
+    const findBooksByTitle = new Promise((resolve, reject) => {
+        const booksByTitle = sampleBooks.filter(b => b.title.toLowerCase().includes(titleToFind.toLowerCase()));
+        if (booksByTitle.length > 0) {
+            resolve(booksByTitle);
+        } else {
+            reject('No books found with this title');
+        }
+    });
+
+    findBooksByTitle
+        .then(books => res.json(books))
+        .catch(error => res.status(404).send(error));
 });
 
 // Task 5: Get book Review
@@ -73,13 +117,11 @@ app.get('/books/:id/reviews', (req, res) => {
 
 // User Registration (Simulated)
 app.post('/users/register', (req, res) => {
-    // Simulate successful registration
     res.json({ message: "User registered successfully", user: req.body });
 });
 
 // User Login (Simulated)
 app.post('/users/login', (req, res) => {
-    // Simulate successful login
     res.json({ message: "User logged in successfully", user: req.body });
 });
 
